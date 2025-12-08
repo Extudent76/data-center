@@ -1,0 +1,39 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--g-color-base-background, #f9fafb);
+}
+
+.layout-main {
+  flex: 1;
+  margin-left: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-content {
+  flex: 1;
+  margin-top: 64px;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: var(--g-color-base-background, #f9fafb);
+}
+
+/* Адаптивность для планшетов */
+@media (max-width: 1024px) {
+  .layout-content {
+    padding: 16px;
+  }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .layout-main {
+    margin-left: 0;
+  }
+
+  .layout-content {
+    margin-top: 56px;
+    padding: 12px;
+  }
+}
