@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  # Проверка и тестирование кода
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: TypeScript check
+      run: npx tsc --noEmit
+      
+    - name: Build project
+      run: npm run build
+      env:
+        VITE_USE_MOCK_DATA: 'true'  # Используем мок-данные для CI
+        
+    - name: Test build artifacts
+      run: |
+        ls -la dist/
+        test -f dist/index.html || exit 1
+        echo "✅ Build artifacts created successfully"

@@ -34,17 +34,14 @@ export class DashboardStore {
     try {
       let data: DashboardResponse;
       
-      // Используем мок-данные если флаг установлен
       if (USE_MOCK_DATA) {
-        // Имитируем задержку сети
         await new Promise(resolve => setTimeout(resolve, 500));
         data = mockDashboardData;
       } else {
-        data = await apiClient.get<DashboardResponse>('/dashboard');
+        data = await apiClient.get<DashboardResponse>('http://64.188.113.193:8080/api/v1/main-info');
       }
       
       runInAction(() => {
-        // Преобразуем данные API в модели приложения
         this.machineHalls = data.racksWidget.map((widget, index) => ({
           id: widget.id,
           name: widget.name,
@@ -53,7 +50,6 @@ export class DashboardStore {
           isExpanded: this.machineHalls.find(h => h.id === widget.id)?.isExpanded ?? false,
         }));
 
-        // Преобразуем данные компаний в арендаторов
         this.tenants = data.companiesWidget.companies.map((company, index) => ({
           id: `tenant-${index}`,
           company: company.name,
@@ -80,10 +76,8 @@ export class DashboardStore {
   }
 
   startPolling(): void {
-    // Сначала загружаем данные
     this.fetchDashboardData();
     
-    // Затем запускаем polling каждые 30 секунд
     this.pollingInterval = setInterval(() => {
       this.fetchDashboardData();
     }, 30000);

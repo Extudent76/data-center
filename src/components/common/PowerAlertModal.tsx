@@ -11,9 +11,6 @@ interface PowerAlertModalProps {
   onEnableBackupPower: () => void;
 }
 
-/**
- * Модальное окно с информацией о сбоях питания
- */
 const PowerAlertModal: React.FC<PowerAlertModalProps> = observer(({
   isOpen,
   alerts,
@@ -21,7 +18,6 @@ const PowerAlertModal: React.FC<PowerAlertModalProps> = observer(({
   onClose,
   onEnableBackupPower,
 }) => {
-  // Форматирование timestamp в читаемый формат
   const formatTimestamp = (): string => {
     const date = new Date();
     return date.toLocaleString('ru-RU', {
@@ -34,7 +30,6 @@ const PowerAlertModal: React.FC<PowerAlertModalProps> = observer(({
     });
   };
 
-  // Колонки таблицы
   const columns = [
     {
       id: 'rackName',
@@ -44,13 +39,12 @@ const PowerAlertModal: React.FC<PowerAlertModalProps> = observer(({
       id: 'machineRoomName',
       name: 'Машинный зал',
     },
-    {
-      id: 'timestamp',
-      name: 'Время отключения',
-    },
+    // {
+    //   id: 'timestamp',
+    //   name: 'Время отключения',
+    // },
   ];
 
-  // Данные для таблицы
   const data = alerts.map((alert) => ({
     id: alert.rackId.toString(),
     rackName: alert.rackName,
@@ -70,7 +64,7 @@ const PowerAlertModal: React.FC<PowerAlertModalProps> = observer(({
           Сбой питания
         </h2>
 
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
           <p style={{ 
             margin: '0 0 16px 0', 
             fontSize: '14px',

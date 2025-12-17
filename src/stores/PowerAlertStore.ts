@@ -1,6 +1,8 @@
-import { makeObservable, observable, action, computed } from 'mobx';
+import { makeObservable, observable, action, computed, runInAction } from 'mobx';
 import { PowerAlertData, RepairRackData } from '../types/models';
 import { mockPowerAlerts, mockRepairRacks } from '../api/mockData';
+import { apiClient } from '../api/client';
+import { POWER_ALERT_ENDPOINTS } from '../api/endpoints';
 
 /**
  * Store для управления алертами о сбоях питания
@@ -41,38 +43,40 @@ export class PowerAlertStore {
     try {
       this.isLoading = true;
       this.error = null;
-
-      // Используем мок-данные
-      // В реальном приложении здесь будет API запрос:
-      // const response = await apiClient.get(POWER_ALERT_ENDPOINTS.GET_ENERGY_STATE);
+      const alerts = await apiClient.get<PowerAlertData[]>(POWER_ALERT_ENDPOINTS.GET_ENERGY_STATE);
       
-      await new Promise(resolve => setTimeout(resolve, 300)); // Имитация задержки сети
-      this.alerts = mockPowerAlerts;
+      runInAction(() => {
+        this.alerts = alerts || [];
+        this.isLoading = false;
+      });
     } catch (error) {
-      this.error = 'Ошибка при загрузке данных об алертах';
-      console.error('Error fetching power alerts:', error);
-    } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        console.warn('API недоступен, используем мок-данные для алертов:', error);
+        this.alerts = mockPowerAlerts;
+        this.error = null;
+        this.isLoading = false;
+      });
     }
   }
 
-  /**
-   * Получить данные о стойках в ремонте
-   */
   @action
   async fetchRepairRacks(): Promise<void> {
     try {
       this.isLoading = true;
       this.error = null;
 
-      // Используем мок-данные
       await new Promise(resolve => setTimeout(resolve, 300));
-      this.repairRacks = mockRepairRacks.repairRacks;
+      
+      runInAction(() => {
+        this.repairRacks = mockRepairRacks.repairRacks;
+        this.isLoading = false;
+      });
     } catch (error) {
-      this.error = 'Ошибка при загрузке данных о ремонте';
+      runInAction(() => {
+        this.error = 'Ошибка при загрузке данных о ремонте';
+        this.isLoading = false;
+      });
       console.error('Error fetching repair racks:', error);
-    } finally {
-      this.isLoading = false;
     }
   }
 
@@ -85,56 +89,44 @@ export class PowerAlertStore {
       this.isLoading = true;
       this.error = null;
 
-      // В реальном приложении здесь будет PATCH запрос:
+      // // Отправляем PATCH запрос для включения резервного питания
       // await apiClient.patch(POWER_ALERT_ENDPOINTS.ENABLE_BACKUP_POWER, mockRepairRacks);
       
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // После успешного включения резервного питания очищаем алерты
-      this.alerts = [];
-      this.closeModal();
+      runInAction(() => {
+        this.alerts = [];
+        this.closeModal();
+        this.isLoading = false;
+      });
     } catch (error) {
-      this.error = 'Ошибка при включении резервного питания';
+      runInAction(() => {
+        this.error = 'Ошибка при включении резервного питания';
+        this.isLoading = false;
+      });
       console.error('Error enabling backup power:', error);
-    } finally {
-      this.isLoading = false;
     }
   }
 
-  /**
-   * Открыть модальное окно
-   */
   @action
   openModal(): void {
     this.isModalOpen = true;
     this.fetchRepairRacks();
   }
 
-  /**
-   * Закрыть модальное окно
-   */
   @action
   closeModal(): void {
     this.isModalOpen = false;
   }
 
-  /**
-   * Запустить polling для проверки алертов
-   */
+
   @action
   startPolling(): void {
-    // Сразу загружаем данные
     this.fetchAlerts();
 
-    // Затем запускаем периодическую проверку каждые 30 секунд
     this.pollingInterval = setInterval(() => {
       this.fetchAlerts();
     }, 30000);
   }
 
-  /**
-   * Остановить polling
-   */
   @action
   stopPolling(): void {
     if (this.pollingInterval) {

@@ -63,7 +63,7 @@ export class ApiClient {
 
   /**
    * Выполняет GET запрос
-   * @param endpoint - Путь эндпоинта
+   * @param endpoint - Путь эндпоинта или полный URL
    * @returns Promise с типизированными данными
    */
   async get<T>(endpoint: string): Promise<T> {
@@ -81,9 +81,19 @@ export class ApiClient {
   }
 
   /**
+   * Выполняет PATCH запрос
+   * @param endpoint - Путь эндпоинта
+   * @param data - Данные для отправки
+   * @returns Promise с типизированными данными
+   */
+  async patch<T>(endpoint: string, data?: any): Promise<T> {
+    return this.retryRequest(() => this.request<T>('PATCH', endpoint, data));
+  }
+
+  /**
    * Выполняет HTTP запрос
    * @param method - HTTP метод
-   * @param endpoint - Путь эндпоинта
+   * @param endpoint - Путь эндпоинта или полный URL
    * @param data - Данные для отправки (опционально)
    * @returns Promise с типизированными данными
    */
@@ -95,9 +105,16 @@ export class ApiClient {
     try {
       const config: AxiosRequestConfig = {
         method,
-        url: endpoint,
         data,
       };
+
+      // Если endpoint начинается с http, используем его как полный URL
+      if (endpoint.startsWith('http')) {
+        config.url = endpoint;
+        config.baseURL = undefined;
+      } else {
+        config.url = endpoint;
+      }
 
       const response = await this.axiosInstance.request<T>(config);
 
@@ -270,13 +287,14 @@ export class ApiClient {
 
 /**
  * Экземпляр API клиента по умолчанию
- * Использует переменную окружения или localhost для разработки
+ * Использует переменную окружения или адрес реального бэкенда
  */
 export const apiClient = new ApiClient(
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+  import.meta.env.VITE_API_BASE_URL || 'http://64.188.113.193:8080'
 );
 
 /**
  * Флаг для использования мок-данных
+ * По умолчанию используем реальные данные, мок-данные только если явно указано
  */
-export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA !== 'false';
+export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
